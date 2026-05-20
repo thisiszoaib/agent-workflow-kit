@@ -93,7 +93,6 @@ Managed paths are listed in `manifest.json` for predictable updates:
 ## Developing the kit
 
 ```bash
-cd agent-workflow-kit
 node bin/install.mjs list
 node bin/install.mjs doctor ..          # check parent Angular app
 node bin/install.mjs init /tmp/test-app --force

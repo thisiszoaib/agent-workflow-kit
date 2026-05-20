@@ -1,0 +1,33 @@
+{
+  "name": "agent-workflow-kit",
+  "version": "0.1.0",
+  "description": "Install shared AGENTS.md, engineering standards, and agent skills into any project",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thisiszoaib/agent-workflow-kit.git"
+  },
+  "keywords": [
+    "agents",
+    "cursor",
+    "claude",
+    "angular",
+    "standards",
+    "skills"
+  ],
+  "bin": {
+    "agent-workflow-kit": "./bin/install.mjs",
+    "awkit": "./bin/install.mjs"
+  },
+  "files": [
+    "AGENTS.md",
+    "docs",
+    ".agents",
+    "manifest.json",
+    "bin"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -60,7 +60,7 @@ The standards describe a **layered** Angular app: UI stays thin, stores orchestr
 
 ### Typical `src/app` layout
 
-![Typical src/app folder layout — core, features, and shared ](docs/images/app-folders-whiteboard.png)
+![Typical src/app folder layout — core, features, and shared](docs/images/app-folders-whiteboard.png)
 
 | Folder      | Purpose                                                                |
 | ----------- | ---------------------------------------------------------------------- |

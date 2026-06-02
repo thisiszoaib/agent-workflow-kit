@@ -1,113 +1,184 @@
 # agent-workflow-kit
 
-Shared [Cursor](https://cursor.com) / agent workflow for Angular projects: one entrypoint (`AGENTS.md`), engineering standards (`docs/standards/`), and task skills (`.agents/skills/`).
+**Agent workflow for Angular teams** — install shared coding standards and Cursor/Claude skills into any Angular project so humans and AI assistants follow the same conventions.
 
-## Layout
+The kit does not change your app at runtime. It copies three things into your repo:
 
-| Path | Purpose |
-|------|---------|
-| `AGENTS.md` | Agent entrypoint — where to look for rules and skills |
-| `docs/standards/` | Implementation conventions (architecture, components, stores, testing, …) |
-| `.agents/skills/` | Task-triggered capabilities (code review, NgRx store, Material theming, …) |
-| `AGENTS.local.md` | **Your project only** — exceptions; not copied or overwritten by the kit |
 
-Code review lives in the **code-review** skill only, not in `docs/standards/`. Topic standards own audit rules; the skill orchestrates scope, routing, and report format.
+| What                      | Where             | Role                                                                           |
+| ------------------------- | ----------------- | ------------------------------------------------------------------------------ |
+| **Agent entrypoint**      | `AGENTS.md`       | Tells assistants where rules and skills live                                   |
+| **Engineering standards** | `docs/standards/` | How *this* stack should be built (layers, components, stores, tests, …)        |
+| **Task skills**           | `.agents/skills/` | Step-by-step workflows for specific jobs (code review, new stores, theming, …) |
 
-## Install into a project
 
-From GitHub (before npm publish):
+Your team keeps `**AGENTS.local.md`** at the project root for repo-specific overrides (versions, internal docs, exceptions). The kit never overwrites that file.
+
+---
+
+## Who this is for
+
+If you use **Cursor**, **Claude Code**, or similar agents on Angular work, you have probably seen inconsistent suggestions: mixed patterns for signals vs RxJS, components calling HTTP directly, or Material overrides that break on upgrade.
+
+This kit gives agents (and new teammates) one place to look:
+
+- **Standards** = what we enforce in this codebase  
+- **Skills** = how to execute common tasks correctly  
+- `**AGENTS.local.md`** = what is different in *your* repo
+
+---
+
+## Quick start
+
+**Requirements:** Node.js 18+
+
+From GitHub:
 
 ```bash
 npx github:thisiszoaib/agent-workflow-kit init
 ```
 
-From npm (after publish):
+After install, open `**AGENTS.md**` in your editor or mention it in agent chats. Add `**AGENTS.local.md**` when you need project-specific rules.
 
-```bash
-npx agent-workflow-kit init
-# or
-npx agent-workflow-kit init
+---
+
+## How the pieces fit together
+
+```mermaid
+flowchart TB
+  subgraph agents["AI assistants (Cursor, Claude, …)"]
+    A[Read AGENTS.md]
+  end
+
+  subgraph entry["Project root"]
+    AG[AGENTS.md]
+    LOCAL[AGENTS.local.md<br/>your overrides only]
+  end
+
+  subgraph standards["docs/standards/ — single source of truth"]
+    ARCH[architecture.md]
+    CORE[core-engineering.md]
+    COMP[angular-components.md]
+    MORE[forms, material, stores,<br/>services, templates, testing]
+  end
+
+  subgraph skills[".agents/skills/ — task workflows"]
+    DEV[angular-developer]
+    STORE[ngrx-signal-store]
+    REV[code-review]
+    OTHER[material-theming, new-app, …]
+  end
+
+  A --> AG
+  AG --> standards
+  AG --> skills
+  AG --> LOCAL
+  REV --> standards
+  STORE --> standards
+  DEV -.->|general Angular API| MORE
 ```
 
-Target another directory:
 
-```bash
-npx agent-workflow-kit init ./path/to/my-app
+
+**Rule of thumb:** Standards define *your* rules. The **angular-developer** skill adds broad Angular guidance on top. The **code-review** skill runs audits against the standards—it is not duplicated inside `docs/standards/`.
+
+---
+
+## Application architecture (from standards)
+
+The standards describe a **layered** Angular app: UI stays thin, stores orchestrate feature flows, services own I/O.
+
+```mermaid
+flowchart LR
+  subgraph ui["1. UI layer"]
+    C[Components & templates]
+  end
+
+  subgraph orch["2. Orchestration"]
+    S[NgRx Signal Stores]
+  end
+
+  subgraph io["3. I/O"]
+    SV[Services<br/>HTTP, Firebase, auth, …]
+  end
+
+  C -->|events, read state| S
+  S -->|delegate| SV
+  SV -->|data| S
+  S -->|signals| C
 ```
 
-Skip overwriting files that already exist (default for `init`):
 
-```bash
-npx agent-workflow-kit init
+
+**Data-flow rule:** For feature work, components should **not** call analytics, Firestore, or arbitrary HTTP directly—they go through a **store method** that delegates to services.
+
+### Typical `src/app` layout
+
+```mermaid
+flowchart TB
+  subgraph app["src/app"]
+    CORE["core/<br/>app-wide stores, auth,<br/>analytics, shared models"]
+    FEAT["features/<br/>route areas: screens,<br/>feature components, colocated stores"]
+    SHARED["shared/<br/>reusable UI used<br/>across features"]
+  end
+
+  FEAT --> CORE
+  SHARED --> CORE
+  FEAT --> SHARED
 ```
 
-Overwrite on install:
 
-```bash
-npx agent-workflow-kit init --force
-```
 
-## Commands
 
-| Command | Description |
-|---------|-------------|
-| `init [dir]` | Copy `AGENTS.md`, `docs/standards/`, `.agents/skills/` into the project |
-| `update [dir]` | Refresh managed files from the kit (overwrites by default) |
-| `list` | Show kit version, managed paths, standards, and skills |
-| `doctor [dir]` | Verify managed paths exist in the project |
+| Folder      | Purpose                                                                |
+| ----------- | ---------------------------------------------------------------------- |
+| `core/`     | Singletons used app-wide (e.g. root `signalStore`, auth, analytics)    |
+| `features/` | Lazy-loaded route areas; colocate stores and types with the feature    |
+| `shared/`   | Cross-feature UI (e.g. auth dialog + local store, thin sub-components) |
 
-```bash
-npx agent-workflow-kit update          # refresh standards + skills
-npx agent-workflow-kit update --no-force   # only add missing files
-npx agent-workflow-kit list
-npx agent-workflow-kit doctor
-```
 
-## Local overrides
+**Local vs app-wide stores:** Dialog-only or screen-only state lives in a **component-scoped** `signalStore`. State read by multiple features belongs in a **root** store (`providedIn: 'root'`). Details: [docs/standards/state-and-stores.md](docs/standards/state-and-stores.md) and [docs/standards/architecture.md](docs/standards/architecture.md).
 
-After `init`, add **`AGENTS.local.md`** at the project root for repo-specific rules (stack versions, forbidden patterns, links to internal docs). The kit never manages that file.
+---
 
-`AGENTS.md` already points agents at standards, skills, and local overrides.
+## Skills (what each package gives you)
 
-## Manifest
+Skills live under `.agents/skills/`. Agents load them when a task matches the skill description (or when you ask explicitly, e.g. “run a code review”).
 
-Managed paths are listed in `manifest.json` for predictable updates:
 
-```json
-{
-  "version": "0.1.0",
-  "managedPaths": [
-    "AGENTS.md",
-    "docs/standards",
-    ".agents/skills"
-  ]
-}
-```
+| Skill                                                                    | When it helps                                                         | In plain terms                                                                                                                                                                                       |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **[angular-developer](.agents/skills/angular-developer/)**               | Building or refactoring Angular code (credits: Angular official team) | Broad, version-aware Angular guidance: components, signals, forms, routing, DI, testing, CLI. Use with `references/` for deep topics. **Your repo’s stricter rules still live in `docs/standards`.** |
+| **[ngrx-signal-store](.agents/skills/ngrx-signal-store/)**               | Creating or changing `signalStore`                                    | Recipes for `withState`, `withComputed`, `withMethods`, `withHooks`, and `rxMethod`—including inject style and async flows. Aligns with [state-and-stores.md](docs/standards/state-and-stores.md).   |
+| **[code-review](.agents/skills/code-review/)**                           | “Review my PR”, convention audits                                     | Scopes the diff, routes files to the right standards, runs a full checklist, and reports deviations with citations—not a separate standards doc.                                                     |
+| **[angular-material-theming](.agents/skills/angular-material-theming/)** | Material 3 theming and overrides                                      | Safe theming with `mat.theme()` and `mat.<component>-overrides()` using real tokens from [material.angular.dev](https://material.angular.dev)—avoids brittle `.mat-mdc-`* hacks.                     |
+| **[angular-new-app](.agents/skills/angular-new-app/)**                   | `ng new` / greenfield setup (credits: Angular official team)          | CLI-first steps for new apps, including `--ai-config` so generated projects match modern agent workflows.                                                                                            |
 
-## Publishing
 
-1. Clone from [github.com/thisiszoaib/agent-workflow-kit](https://github.com/thisiszoaib/agent-workflow-kit).
-2. `npm publish --access public` (optional).
-3. Consumers run `npx agent-workflow-kit init` or `npx github:thisiszoaib/agent-workflow-kit init`.
+---
 
-## Developing the kit
+## Standards (what each doc covers)
 
-```bash
-node bin/install.mjs list
-node bin/install.mjs doctor ..          # check parent Angular app
-node bin/install.mjs init /tmp/test-app --force
-```
+All standards are in [docs/standards/](docs/standards/). `AGENTS.md` links the full index; summary:
 
-## Included skills
 
-- `angular-developer` — upstream Angular patterns and references
-- `angular-material-theming` — Material 3 theming and token overrides
-- `angular-new-app` — new Angular CLI app guidance
-- `ngrx-signal-store` — NgRx Signal Store patterns
-- `code-review` — convention review workflow (orchestrates `docs/standards`)
+| Standard                                                                    | You will find                                                                        |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [architecture.md](docs/standards/architecture.md)                           | Layers (UI → store → service), `core/` / `features/` / `shared/`, canonical examples |
+| [core-engineering.md](docs/standards/core-engineering.md)                   | TypeScript strictness, accessibility (WCAG AA, AXE)                                  |
+| [angular-components.md](docs/standards/angular-components.md)               | Standalone components, OnPush, control flow, inputs/outputs                          |
+| [forms.md](docs/standards/forms.md)                                         | Signal Forms and project form conventions                                            |
+| [templates-and-styling.md](docs/standards/templates-and-styling.md)         | Tailwind, splitting large templates, button layout                                   |
+| [material.md](docs/standards/material.md)                                   | Material usage and theming expectations in this repo                                 |
+| [state-and-stores.md](docs/standards/state-and-stores.md)                   | Signals in components, Signal Store patterns, app vs local stores, `rxMethod`        |
+| [services-and-side-effects.md](docs/standards/services-and-side-effects.md) | What belongs in services vs stores vs components                                     |
+| [testing.md](docs/standards/testing.md)                                     | Unit tests, harnesses, E2E (e.g. Playwright)                                         |
 
-## Included standards
 
-- `architecture.md`, `core-engineering.md`, `angular-components.md`, `forms.md`
-- `templates-and-styling.md`, `material.md`, `state-and-stores.md`
-- `services-and-side-effects.md`, `testing.md`
+---
+
+---
+
+## License
+
+MIT — see repository license file.

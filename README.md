@@ -12,7 +12,7 @@ The kit does not change your app at runtime. It copies three things into your re
 | **Task skills**           | `.agents/skills/` | Step-by-step workflows for specific jobs (code review, new stores, theming, …) |
 
 
-Your team keeps `**AGENTS.local.md`** at the project root for repo-specific overrides (versions, internal docs, exceptions). The kit never overwrites that file.
+Your team keeps **`AGENTS.local.md`** at the project root for repo-specific overrides (versions, internal docs, exceptions). The kit never overwrites that file.
 
 ---
 
@@ -24,7 +24,7 @@ This kit gives agents (and new teammates) one place to look:
 
 - **Standards** = what we enforce in this codebase  
 - **Skills** = how to execute common tasks correctly  
-- `**AGENTS.local.md`** = what is different in *your* repo
+- **`AGENTS.local.md`** = what is different in *your* repo
 
 ---
 
@@ -38,47 +38,13 @@ From GitHub:
 npx github:thisiszoaib/agent-workflow-kit init
 ```
 
-After install, open `**AGENTS.md**` in your editor or mention it in agent chats. Add `**AGENTS.local.md**` when you need project-specific rules.
+After install, open **`AGENTS.md`** in your editor or mention it in agent chats. Add **`AGENTS.local.md`** when you need project-specific rules.
 
 ---
 
 ## How the pieces fit together
 
-```mermaid
-flowchart TB
-  subgraph agents["AI assistants (Cursor, Claude, …)"]
-    A[Read AGENTS.md]
-  end
-
-  subgraph entry["Project root"]
-    AG[AGENTS.md]
-    LOCAL[AGENTS.local.md<br/>your overrides only]
-  end
-
-  subgraph standards["docs/standards/ — single source of truth"]
-    ARCH[architecture.md]
-    CORE[core-engineering.md]
-    COMP[angular-components.md]
-    MORE[forms, material, stores,<br/>services, templates, testing]
-  end
-
-  subgraph skills[".agents/skills/ — task workflows"]
-    DEV[angular-developer]
-    STORE[ngrx-signal-store]
-    REV[code-review]
-    OTHER[material-theming, new-app, …]
-  end
-
-  A --> AG
-  AG --> standards
-  AG --> skills
-  AG --> LOCAL
-  REV --> standards
-  STORE --> standards
-  DEV -.->|general Angular API| MORE
-```
-
-
+![How the kit fits together — AGENTS.md, standards, skills, and local overrides](docs/images/kit-workflow-whiteboard.png)
 
 **Rule of thumb:** Standards define *your* rules. The **angular-developer** skill adds broad Angular guidance on top. The **code-review** skill runs audits against the standards—it is not duplicated inside `docs/standards/`.
 
@@ -88,47 +54,13 @@ flowchart TB
 
 The standards describe a **layered** Angular app: UI stays thin, stores orchestrate feature flows, services own I/O.
 
-```mermaid
-flowchart LR
-  subgraph ui["1. UI layer"]
-    C[Components & templates]
-  end
-
-  subgraph orch["2. Orchestration"]
-    S[NgRx Signal Stores]
-  end
-
-  subgraph io["3. I/O"]
-    SV[Services<br/>HTTP, Firebase, auth, …]
-  end
-
-  C -->|events, read state| S
-  S -->|delegate| SV
-  SV -->|data| S
-  S -->|signals| C
-```
-
-
+![Angular app layers — components, signal stores, and services](docs/images/app-layers-whiteboard.png)
 
 **Data-flow rule:** For feature work, components should **not** call analytics, Firestore, or arbitrary HTTP directly—they go through a **store method** that delegates to services.
 
 ### Typical `src/app` layout
 
-```mermaid
-flowchart TB
-  subgraph app["src/app"]
-    CORE["core/<br/>app-wide stores, auth,<br/>analytics, shared models"]
-    FEAT["features/<br/>route areas: screens,<br/>feature components, colocated stores"]
-    SHARED["shared/<br/>reusable UI used<br/>across features"]
-  end
-
-  FEAT --> CORE
-  SHARED --> CORE
-  FEAT --> SHARED
-```
-
-
-
+![Typical src/app folder layout — core, features, and shared ](docs/images/app-folders-whiteboard.png)
 
 | Folder      | Purpose                                                                |
 | ----------- | ---------------------------------------------------------------------- |
@@ -174,8 +106,6 @@ All standards are in [docs/standards/](docs/standards/). `AGENTS.md` links the f
 | [services-and-side-effects.md](docs/standards/services-and-side-effects.md) | What belongs in services vs stores vs components                                     |
 | [testing.md](docs/standards/testing.md)                                     | Unit tests, harnesses, E2E (e.g. Playwright)                                         |
 
-
----
 
 ---
 

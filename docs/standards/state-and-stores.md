@@ -34,6 +34,8 @@ When **one** component has lots of local state, branching flow, async work, and 
 2. Move orchestration into `withMethods` / `withComputed`; call app-level stores and services from there, **not** from the component.
 3. Component owns template, host bindings, and presentational wiring (`input()`/`output()`, thin handlers). It is fine for the file to stay long if the **template** is one coherent view; multiple flows → sub-components + shared parent store (see [templates-and-styling.md](templates-and-styling.md)).
 
+**Audit:** Flag sibling sub-components that pass the same store-derived values or callbacks through the parent—shared feature state belongs in the parent-provided store, not in a prop-drilling chain.
+
 **Examples:** Multi-step `MatDialog`s, heavy multi-mode forms. Reference: `shared/components/auth-dialog` with `AuthDialogStore` + `BuilderStore`.
 
 ## `rxMethod` vs `async`

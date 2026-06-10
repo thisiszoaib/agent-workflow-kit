@@ -24,6 +24,8 @@ Use when a template is too large or encodes **multiple flows** in one file (e.g.
 3. Sub-components use `inject(TheSameStore)` from the parent injector—do **not** add a second provider per child.
 4. Reusability is not required; prefer clarity and testability.
 
+**Review trigger:** If a sub-component mostly forwards parent store state or actions through many `input()`/`output()` pairs, inject the parent-provided feature store instead; keep inputs only for per-instance data (e.g. the current row/group id).
+
 **How to audit:** Identify nameable regions; grep for multiple top-level branches that are different user journeys; prefer extracting filter forms and tables when dense.
 
 **Review assessment:** For every changed component/template where these triggers apply, include a short **Template size / split assessment** in review findings. If no split is needed, briefly state why (for example, the template is long but still one coherent workflow).
